@@ -12,8 +12,8 @@ uint32_t freesEnd_;
 uint32_t procTable_;
 
 uint32_t getFreeFrame(){
-	uint32_t freeFrame = freeStart_;
-	freeStart_ = dccvmm_phy_read(freeFrame <<8 || 0);
+	uint32_t freeFrame = freesStart_;
+	freesStart_ = dccvmm_phy_read(freeFrame <<8 || 0);
 	return freeFrame;
 }
 

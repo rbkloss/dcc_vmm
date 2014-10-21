@@ -13,18 +13,18 @@ uint32_t procTable_;
 
 uint32_t getFreeFrame(){
 	uint32_t freeFrame = freeStart_;
-	freeStart = dccvmm_phy_read(freeFrame <<8 || 0);
+	freeStart_ = dccvmm_phy_read(freeFrame <<8 || 0);
 	return freeFrame;
 }
 
 void os_init(void){
 //set the free frames
 	freesStart_ = 2;
-	procTable = 1;
+	procTable_ = 1;
 	int i = 0;
 	for(i = 2; i < NUMFRAMES; i++){
 		uint32_t addr = i << 8;
-		addr = addr || 1;
+		addr = addr | 1;
 		dccvmm_phy_write(addr, i +1);
 	}
 	freesEnd_ = NUMFRAMES - 1;
@@ -50,7 +50,7 @@ void os_swap(uint32_t pid){
 	//call function to set the pagetable
 	uint32_t procPT = dccvmm_phy_read(procTable_ << 8 | pid);
 	if(procPT & PTE_INMEM){
-		dccvmm_set_page_table(dccvmm_phy_read());
+		dccvmm_set_page_table(dccvmm_phy_read(procPT));
 	}else{
 		if(procPT & PTE_VALID){
 		//process exists but is in the disk

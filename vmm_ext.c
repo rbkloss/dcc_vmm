@@ -33,7 +33,7 @@ void os_init(void) {
     dccvmm_set_page_table(0);
 }
 
-void os_alloc(uint32_t addr) {
+void os_alloc(uint32_t addr) {//TODO check for errors and exceptions
     //search for a free frame
     uint32_t freeFrame = getFreeFrame();
     //make page table point to the found frame
@@ -43,11 +43,17 @@ void os_alloc(uint32_t addr) {
     dccvmm_phy_write(frameOfPageTable<<8 | PTE2OFF(addr), freeFrame);    
 }
 
-void os_free(uint32_t addr) {
+void os_free(uint32_t addr) {//TODO check for errors and exceptions
+    //find the phy addres relative to the virtual address
+    uint32_t pdAddr = dccvmm_phy_read(procTable_<< 8 | currentPID_);
+    uint32_t ptFrame = dccvmm_phy_read(pdAddr << 8 | PTE1OFF(addr));
+    uint32_t phyAddr = dccvmm_phy_read(ptFrame << 8 | PTE2OFF(addr));
     //update the page table
+    dccvmm_phy_write(ptFrame << 8 | PTE2OFF(addr), 0);
     //update the free list:
+    dccvmm_phy_write(phyAddr << 8, freesStart_);    
     //	make the freed frame the freeStart and make it point to the old freeStart
-    //get the frame addr
+    freesStart_ = phyAddr;
 
 }
 

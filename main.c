@@ -28,7 +28,7 @@ int main(int argc, char **argv)
 			os_alloc(address);
 		} else if(!strncmp(line, "free", 4)) {
 			sscanf(line, "free %x\n", &address);
-			os_alloc(address);
+			os_free(address);
 		} else if(!strncmp(line, "read", 4)) {
 			sscanf(line, "read %x\n", &address);
 			dccvmm_read(address);

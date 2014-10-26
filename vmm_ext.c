@@ -1,19 +1,27 @@
 #include "vmm_ext.h"
 
 uint32_t getFreeFrame() {
+    if(outOfMemory_){
+        //TODO move victim frame to disk, free it and return.
+    }
     uint32_t freeFrame = freesStart_;
     freesStart_ = dccvmm_phy_read(freeFrame << 8);
+    if (freesStart_ == 0) {
+        //this is the last free frame
+        //out of memory
+        outOfMemory_ = TRUE;
+    }
     printf("||Found Free Frame @(%x)||\n", freeFrame);
     return freeFrame;
 }
 
-void os_alloc(uint32_t addr) {//TODO check for errors and exceptions
+void os_alloc(uint32_t addr) {
     //search for a free frame
     printf("\tAllocating memory ...\n");
     if (PAGEOFFSET(addr)) {
-        printf("Invalid Alloc on address :[%x]\n", addr);
+        fprintf(stderr, "Invalid Alloc on address :[%x]\n", addr);
         return;
-    }
+    }    
     //make page table point to the found frame
     uint32_t pageDir = dccvmm_phy_read(procTable_ << 8 | currentPID_);
     uint32_t frameOfPageTable = dccvmm_phy_read(
@@ -24,9 +32,14 @@ void os_alloc(uint32_t addr) {//TODO check for errors and exceptions
         dccvmm_phy_write(PTEFRAME(pageDir) << 8 | PTE1OFF(addr),
                 frameOfPageTable | PTE_VALID | PTE_INMEM | PTE_RW);
     }
+    if (dccvmm_phy_read(PTEFRAME(frameOfPageTable) << 8 | PTE2OFF(addr)) & PTE_VALID) {
+        fprintf(stderr, "\tDouble Alloc Detected\n");
+        return;
+    }
     uint32_t freeFrame = getFreeFrame();
     //write on the page table the allocated Frame
-    dccvmm_phy_write(PTEFRAME(frameOfPageTable) << 8 | PTE2OFF(addr), freeFrame | PTE_VALID | PTE_INMEM | PTE_RW);
+    dccvmm_phy_write(PTEFRAME(frameOfPageTable) << 8 | PTE2OFF(addr),
+            (!FREEFLAG & freeFrame) | PTE_VALID | PTE_INMEM | PTE_RW);
 
     printf("\t||Allocated [%x] @:[%x]\n", addr, freeFrame);
 }
@@ -43,7 +56,7 @@ void os_free(uint32_t addr) {//TODO check for errors and exceptions
     //update the page table
     dccvmm_phy_write(PTEFRAME(ptFrame << 8) | PTE2OFF(addr), 0);
     //update the free list:
-    dccvmm_phy_write(PTEFRAME(phyAddr << 8), freesStart_);
+    dccvmm_phy_write(PTEFRAME(phyAddr << 8), freesStart_ | FREEFLAG);
     //	make the freed frame the freeStart and make it point to the old freeStart
     freesStart_ = phyAddr;
 
@@ -52,9 +65,10 @@ void os_free(uint32_t addr) {//TODO check for errors and exceptions
 
 uint32_t os_pagefault(uint32_t address, uint32_t perms, uint32_t pte) {
     if ((pte & PTE_VALID) != PTE_VALID) {
-        printf("Faulty memmory access @[%x]\n", address);
+        fprintf(stderr, "Faulty memmory access @[%x]\n", address);        
         return VM_ABORT;
-    }
-
-    // TODO: check INMEM flag - part 5
+    }else if((pte & PTE_INMEM) == PTE_INMEM){
+        //TODO pte on disk
+        
+    }    
 }

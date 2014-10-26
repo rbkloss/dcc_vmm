@@ -68,7 +68,7 @@ uint32_t dccvmm_read(uint32_t address) {
 uint32_t dccvmm_phy_read(uint32_t phyaddr) {
     assert((phyaddr >> 8) < NUMFRAMES);
     uint32_t data = __frames[phyaddr >> 8].words[PAGEOFFSET(phyaddr)];
-    printf("vmm phy %x read %x\n", phyaddr, data);
+   // printf("vmm phy %x read %x\n", phyaddr, data);
     return data;
 }
 
@@ -90,7 +90,7 @@ void dccvmm_write(uint32_t address, uint32_t data) {
 void dccvmm_phy_write(uint32_t phyaddr, uint32_t data) {
     assert((phyaddr >> 8) < NUMFRAMES);
     __frames[phyaddr >> 8].words[PAGEOFFSET(phyaddr)] = data;
-    printf("vmm phy %x write %x\n", phyaddr, data);
+   // printf("vmm phy %x write %x\n", phyaddr, data);
 }
 
 void dccvmm_zero(uint32_t framenum) {

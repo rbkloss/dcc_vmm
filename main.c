@@ -22,25 +22,22 @@ int main(int argc, char **argv) {
         unsigned address;
         if (line[0] == '#') continue;
 
-        if (!strncmp(line, "alloc", 5)) {
-            printf("Allocating memory ...\n");
+        if (!strncmp(line, "alloc", 5)) {            
             sscanf(line, "alloc %x\n", &address);
             os_alloc(address);
-        } else if (!strncmp(line, "free", 4)) {
-            printf("Freeing memory ...\n");
+        } else if (!strncmp(line, "free", 4)) {            
             sscanf(line, "free %x\n", &address);
             os_free(address);
         } else if (!strncmp(line, "read", 4)) {
-            printf("Reading from memopry ...\n");
+            printf("\tReading from memopry ...\n");
             sscanf(line, "read %x\n", &address);
             dccvmm_read(address);
         } else if (!strncmp(line, "write", 5)) {
-            printf("Writing at memopry ...\n");
+            printf("\tWriting at memopry ...\n");
             unsigned data;
             sscanf(line, "write %x %x\n", &address, &data);
             dccvmm_write(address, data);
-        } else if (!strncmp(line, "swap", 4)) {
-            printf("Swapping processes ...\n");
+        } else if (!strncmp(line, "swap", 4)) {            
             unsigned pid;
             sscanf(line, "swap %u\n", &pid);
             os_swap(pid);

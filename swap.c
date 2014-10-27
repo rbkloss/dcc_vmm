@@ -13,10 +13,8 @@ void os_swap(uint32_t pid) {
         if (processDir & PTE_VALID) {
             //process exists but is in the disk            
             printf("Loading Process from disk\n");
-            uint32_t diskDir = dccvmm_phy_read(diskProcTable_ << 8 | pid);
-            processDir = getFreeFrame();
-            dccvmm_load_frame(diskDir, processDir);
-
+            uint32_t dir;
+            loadPageDir(pid, &dir);
         } else {
             printf("New Process\n");
             processDir = getFreeFrame();

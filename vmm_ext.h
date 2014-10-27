@@ -51,5 +51,4 @@ void loadPTE(uint32_t address, uint32_t pt);
 
 void copyFrames(uint32_t source, uint32_t dest);
 
-uint32_t getFreeSector();
 #endif

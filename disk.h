@@ -11,5 +11,5 @@
 void disk_init ();
 uint32_t getFreeSector ();
 void setSectorUsed (uint32_t sectorID);
-uint32_t checkBits (uint32_t data);
+static uint32_t checkBits (uint32_t data);
 #endif

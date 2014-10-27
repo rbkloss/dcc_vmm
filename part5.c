@@ -1,10 +1,6 @@
 #include "vmm_ext.h"
 
 void dumpProcess(int pid) {
-    dumpPageDir(pid);
-}
-
-void dumpProcess(int pid) {
     uint32_t dir;
     dumpPageDir(pid, &dir);
 }
@@ -17,7 +13,8 @@ void dumpPageDir(int pid, uint32_t* dir) {
     } else {
         int i = 0;
         for (i = 0; i < NUMWORDS; i++) {
-            dumpPageTable(i << 8, *dir);
+            uint32_t pt;
+            dumpPageTable(i << 8, *dir, &pt);
         }
         diskDIR = PTE_SECTOR(getFreeSector());
         dccvmm_dump_frame(diskDIR, *dir);
@@ -28,7 +25,7 @@ void dumpPageDir(int pid, uint32_t* dir) {
 
 void dumpPageTable(uint32_t address, uint32_t dir, uint32_t *pt) {
     uint32_t diskPT;
-    *pt = dccvmm_phy_read(pt << 8 | PTE2OFF(address));
+    *pt = dccvmm_phy_read((*pt) << 8 | PTE2OFF(address));
     if ((*pt) & PTE_INMEM != PTE_INMEM) {
         fprintf(stderr, "Target frame for dump is not in mem\n");
     } else {
@@ -67,7 +64,8 @@ void copyFrames(uint32_t source, uint32_t dest) {
 }
 
 void loadProcess(int pid) {
-    loadPageDir(pid);
+    uint32_t dir;
+    loadPageDir(pid, &dir);
 }
 
 void loadPageDir(int pid, uint32_t *dir) {

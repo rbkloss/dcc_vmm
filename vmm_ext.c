@@ -21,6 +21,7 @@ void os_alloc(uint32_t addr) {
     //search for a free frame
     printf("\tAllocating memory ...\n");
     if (PAGEOFFSET(addr)) {
+        // offset must be *00;
         fprintf(stderr, "Invalid Alloc on address :[%x]\n", addr);
         return;
     }
@@ -39,6 +40,7 @@ void os_alloc(uint32_t addr) {
         return;
     }
     uint32_t freeFrame = getFreeFrame();
+    // frame is not avaliable anymore;
     freeFrame = freeFrame & (~FREEFLAG);
     //write on the page table the allocated Frame
     dccvmm_phy_write(PTEFRAME(frameOfPageTable) << 8 | PTE2OFF(addr),

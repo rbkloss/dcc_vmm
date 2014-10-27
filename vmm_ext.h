@@ -12,7 +12,7 @@
 #define FALSE 0
 
 #define FREEFLAG 0x40000000
-#define PTE_SECTOR(addr) (addr & 0fffff)
+#define PTE_SECTOR(addr) (addr & 0xfffff)
 #define NUMWORDS 256
 #define SWAP_FRAME 13
 

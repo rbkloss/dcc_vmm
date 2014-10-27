@@ -41,16 +41,16 @@ void os_swap(uint32_t pid);
 //parte 5
 
 void dumpProcess(int pid);
-void dumpPageDir(int pid);
-void dumpPageTable(uint32_t dirAddr, uint32_t dirSector);
-void dumpPTE(uint32_t ptAddr, uint32_t ptSector);
+void dumpPageDir(int pid, uint32_t* dir);
+void dumpPageTable(uint32_t address, uint32_t dir, uint32_t *pt);
+void dumpPTE(uint32_t address, uint32_t pt);
 
 
 //TODO
 void loadProcess(int pid);
-void loadPageDir(int pid);
-void loadPageTable(uint32_t dirAddr, uint32_t dirSector);
-void loadPTE(uint32_t ptAddr, uint32_t ptSector);
+void loadPageDir(int pid, uint32_t* dir);
+void loadPageTable(uint32_t address, uint32_t dir, uint32_t *pt);
+void loadPTE(uint32_t address, uint32_t pt);
 
 void copyFrames(uint32_t source, uint32_t dest);
 

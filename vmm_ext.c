@@ -74,13 +74,8 @@ void os_free(uint32_t addr) {
             emptyFlag = FALSE;
         }
     }
-    if (emptyFlag) {
-        uint32_t diskDir = dccvmm_phy_read(diskProcTable_ << 8 | currentPID_);
-        dccvmm_load_frame(diskDir, SWAP_FRAME);
-        uint32_t ptSector = getFreeSector();
-        dccvmm_phy_write(SWAP_FRAME << 8 | PTE1OFF(addr), ptSector | PTE_VALID);
-        dccvmm_dump_frame(SWAP_FRAME, diskDir);
-        dccvmm_phy_write(pdAddr << 8 | PTE1OFF(addr), PTE_VALID | PTE_RW);
+    if (emptyFlag) {        
+        dumpPageTable(addr, pdAddr, &ptFrame);
     }
 }
 
@@ -90,35 +85,10 @@ uint32_t os_pagefault(uint32_t address, uint32_t perms, uint32_t pte) {
                 "\t!!Faulty memory access @[%x] pte[%x]\n", address, pte);
         return VM_ABORT;
     } else if ((pte & PTE_INMEM) == PTE_INMEM) {        
-        uint32_t diskDir, diskPT, diskPTE;
-        uint32_t dir, pt, mpte;
+        uint32_t dir, pt;
 
-        diskDir = dccvmm_phy_read(diskProcTable_ << 8 | currentPID_);
-        dir = dccvmm_phy_read(procTable_ << 8 | currentPID_);
-        if (dir & PTE_INMEM != PTE_INMEM) {
-            dir = getFreeFrame();
-            dccvmm_phy_write(procTable_ << 8 | currentPID_,
-                    dir | PTE_VALID | PTE_INMEM | PTE_RW);
-        }
-        dccvmm_load_frame(diskDir, SWAP_FRAME);
-
-        diskPT = dccvmm_phy_read(SWAP_FRAME << 8 | PTE1OFF(address));
-        pt = dccvmm_phy_read(dir << 8 | PTE1OFF(address));
-        if (pt & PTE_INMEM != PTE_INMEM) {
-            pt = getFreeFrame();
-            dccvmm_phy_write(dir << 8 | PTE1OFF(address),
-                    pt | PTE_VALID | PTE_INMEM | PTE_RW);
-        }
-        dccvmm_load_frame(diskPT, SWAP_FRAME);
-
-        diskPTE = dccvmm_phy_read(SWAP_FRAME << 8 | PTE2OFF(address));
-        mpte = dccvmm_phy_read(pt << 8 | PTE2OFF(address));
-        if (mpte & PTE_INMEM != PTE_INMEM) {
-            mpte = getFreeFrame();
-            dccvmm_phy_write(pt << 8 | PTE2OFF(address),
-                    mpte | PTE_VALID | PTE_INMEM | PTE_RW);
-        }
-        dccvmm_load_frame(diskPTE, SWAP_FRAME);
-        copyFrames(SWAP_FRAME, mpte);
+        loadPageDir(currentPID_, &dir);
+        loadPageTable(address, dir, &pt);
+        loadPTE(address, pt);
     }
 }

@@ -126,5 +126,5 @@ void dccvmm_dump_frame(uint32_t framenum, uint32_t sector) {
 }
 
 void dccvmm_load_frame(uint32_t sector, uint32_t framenum) {
-    memcpy(&(__disk[sector]), &(__frames[framenum]), sizeof (__disk[0]));
+    memcpy(&(__frames[framenum]), &(__disk[sector]), sizeof (__disk[0]));
 }

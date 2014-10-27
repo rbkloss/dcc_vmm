@@ -23,14 +23,12 @@ int outOfMemory_;
 
 unsigned currentPID_;
 
-uint32_t getFreeFrame();
-uint32_t getFreeSector();
-
 //parte 2
 void os_init(void);
 
-
 //parte 3
+uint32_t getFreeFrame();
+
 void os_alloc(uint32_t addr);
 void os_free(uint32_t addr);
 uint32_t os_pagefault(uint32_t address, uint32_t perms, uint32_t pte);
@@ -46,7 +44,6 @@ void dumpPageTable(uint32_t address, uint32_t dir, uint32_t *pt);
 void dumpPTE(uint32_t address, uint32_t pt);
 
 
-//TODO
 void loadProcess(int pid);
 void loadPageDir(int pid, uint32_t* dir);
 void loadPageTable(uint32_t address, uint32_t dir, uint32_t *pt);

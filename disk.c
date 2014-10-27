@@ -22,6 +22,7 @@ void disk_init (){
 		setSectorUsed (i);
 	}
 
+	// Exemplo de uso!!!
 	uint32_t sectorID = getFreeSector();
 	printf ("free sector: %d\n", sectorID);
 	setSectorUsed (sectorID);

@@ -39,9 +39,19 @@ void os_swap(uint32_t pid);
 
 //parte 5
 
-void dumpProcess(int pid, uint32_t address);
-void dumpPageDir(int pid, uint32_t address);
-void dumpPageTable(int pid, uint32_t address);
+void dumpProcess(int pid);
+void dumpPageDir(int pid);
+void dumpPageTable(uint32_t dirAddr, uint32_t dirSector);
+void dumpPTE(uint32_t ptAddr, uint32_t ptSector);
 
-void getFreeSector();
+
+//TODO
+void loadProcess(int pid);
+void loadPageDir(int pid);
+void loadPageTable(uint32_t dirAddr, uint32_t dirSector);
+void loadPTE(uint32_t ptAddr, uint32_t ptSector);
+
+void copyFrames(uint32_t source, uint32_t dest);
+
+uint32_t getFreeSector();
 #endif

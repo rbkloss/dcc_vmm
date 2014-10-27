@@ -4,11 +4,15 @@
 void os_init(void) {
     //set the free frames
     outOfMemory_ = FALSE;
-    freesStart_ = 2;
+    freesStart_ = 16;
     procTable_ = 1;
+    diskProcTable_ = 3;
     int i = 0;
+    for (i = 0; i < NUMFRAMES; i++) {
+        dccvmm_zero(i);
+    }
     uint32_t addr;
-    for (i = 2; i < NUMFRAMES - 1; i++) {
+    for (i = 16; i < NUMFRAMES - 1; i++) {
         addr = i << 8;
         dccvmm_phy_write(addr, i + 1);
     }

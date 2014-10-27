@@ -89,36 +89,37 @@ uint32_t os_pagefault(uint32_t address, uint32_t perms, uint32_t pte) {
         fprintf(stderr,
                 "\t!!Faulty memory access @[%x] pte[%x]\n", address, pte);
         return VM_ABORT;
-    } else if ((pte & PTE_INMEM) == PTE_INMEM) {        
+    } else if ((pte & PTE_INMEM) == PTE_INMEM) {
         uint32_t diskDir, diskPT, diskPTE;
         uint32_t dir, pt, mpte;
 
-        diskDir = dccvmm_phy_read(diskProcTable_ << 8 | currentPID_);
+
         dir = dccvmm_phy_read(procTable_ << 8 | currentPID_);
         if (dir & PTE_INMEM != PTE_INMEM) {
+            diskDir = PTE_SECTOR(dir);
             dir = getFreeFrame();
+            dccvmm_load_frame(diskDir, dir);
             dccvmm_phy_write(procTable_ << 8 | currentPID_,
-                    dir | PTE_VALID | PTE_INMEM | PTE_RW);
+                    dir | PTE_VALID | PTE_RW | PTE_INMEM);
         }
-        dccvmm_load_frame(diskDir, SWAP_FRAME);
 
-        diskPT = dccvmm_phy_read(SWAP_FRAME << 8 | PTE1OFF(address));
         pt = dccvmm_phy_read(dir << 8 | PTE1OFF(address));
         if (pt & PTE_INMEM != PTE_INMEM) {
+            diskPT = PTE_SECTOR(dir);
             pt = getFreeFrame();
+            dccvmm_load_frame(diskPT, pt);
             dccvmm_phy_write(dir << 8 | PTE1OFF(address),
-                    pt | PTE_VALID | PTE_INMEM | PTE_RW);
+                    pt | PTE_VALID | PTE_RW | PTE_INMEM);
         }
-        dccvmm_load_frame(diskPT, SWAP_FRAME);
 
-        diskPTE = dccvmm_phy_read(SWAP_FRAME << 8 | PTE2OFF(address));
+
         mpte = dccvmm_phy_read(pt << 8 | PTE2OFF(address));
         if (mpte & PTE_INMEM != PTE_INMEM) {
+            diskPTE = PTE_SECTOR(mpte);
             mpte = getFreeFrame();
+            dccvmm_load_frame(diskDir, dir);
             dccvmm_phy_write(pt << 8 | PTE2OFF(address),
-                    mpte | PTE_VALID | PTE_INMEM | PTE_RW);
-        }
-        dccvmm_load_frame(diskPTE, SWAP_FRAME);
-        copyFrames(SWAP_FRAME, mpte);
+                    mpte | PTE_VALID | PTE_RW | PTE_INMEM);
+        }        
     }
 }

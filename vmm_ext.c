@@ -74,11 +74,8 @@ void os_free(uint32_t addr) {
             emptyFlag = FALSE;
         }
     }
-    if (emptyFlag) {
-        uint32_t disk = dccvmm_phy_read(procTable_ << 8 currentPID_);
-        if (disk & PTE_INMEM != PTE_INMEM) {
-            
-        }
+    if (emptyFlag) {        
+        dumpPageTable(addr, pdAddr, &ptFrame);
     }
 }
 

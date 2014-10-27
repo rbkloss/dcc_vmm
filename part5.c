@@ -25,7 +25,7 @@ void dumpPageDir(int pid, uint32_t* dir) {
 
 void dumpPageTable(uint32_t address, uint32_t dir, uint32_t *pt) {
     uint32_t diskPT;
-    *pt = dccvmm_phy_read((*pt) << 8 | PTE2OFF(address));
+    *pt = dccvmm_phy_read(dir << 8 | PTE2OFF(address));
     if ((*pt) & PTE_INMEM != PTE_INMEM) {
         fprintf(stderr, "Target frame for dump is not in mem\n");
     } else {
@@ -45,7 +45,7 @@ void dumpPTE(uint32_t address, uint32_t pt) {
     uint32_t pte = dccvmm_phy_read(pt << 8 | PTE2OFF(address));
     if (pte & PTE_INMEM != PTE_INMEM) {
         fprintf(stderr, "Target frame for dump is not in mem\n");
-    } else {
+    } else if(pte & PTE_VALID == PTE_VALID){
         diskPTE = PTE_SECTOR(getFreeSector());
         dccvmm_dump_frame(diskPTE, pte);
         dccvmm_phy_write(pt << 8 | PTE2OFF(address),

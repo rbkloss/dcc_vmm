@@ -43,5 +43,5 @@ void dumpProcess(int pid, uint32_t address);
 void dumpPageDir(int pid, uint32_t address);
 void dumpPageTable(int pid, uint32_t address);
 
-void getFreeSector();
+// void getFreeSector();
 #endif

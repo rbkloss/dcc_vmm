@@ -50,7 +50,7 @@ uint32_t getFreeFrame() {
 
         uint32_t freeSector = getFreeSector();
         dccvmm_dump_frame(pte, freeSector);
-        dccvmm_phy_write(,);
+        // dccvmm_phy_write(,);
     }
     uint32_t freeFrame = freesStart_;
     freesStart_ = dccvmm_phy_read(freeFrame << 8);
@@ -67,6 +67,7 @@ void os_alloc(uint32_t addr) {
     //search for a free frame
     printf("\tAllocating memory ...\n");
     if (PAGEOFFSET(addr)) {
+        // offset must be *00;
         fprintf(stderr, "Invalid Alloc on address :[%x]\n", addr);
         return;
     }
@@ -85,6 +86,7 @@ void os_alloc(uint32_t addr) {
         return;
     }
     uint32_t freeFrame = getFreeFrame();
+    // frame is not avaliable anymore;
     freeFrame = freeFrame & (~FREEFLAG);
     //write on the page table the allocated Frame
     dccvmm_phy_write(PTEFRAME(frameOfPageTable) << 8 | PTE2OFF(addr),

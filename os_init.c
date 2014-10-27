@@ -1,8 +1,12 @@
 #include "vmm_ext.h"
 #include "vmm.h"
+#include "disk.h"
 
 void os_init(void) {
     //set the free frames
+
+    disk_init();
+
     outOfMemory_ = FALSE;
     freesStart_ = 16;
     procTable_ = 1;

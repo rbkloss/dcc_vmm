@@ -57,7 +57,7 @@ void setSectorUsed (uint32_t sectorID){
 	dccvmm_dump_frame (SWAP_FRAME, secPos);
 }
 
-static uint32_t getFreeSector (){
+uint32_t getFreeSector (){
 
 	int i = 0;
 

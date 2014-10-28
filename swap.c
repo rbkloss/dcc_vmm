@@ -16,10 +16,10 @@ void os_swap(uint32_t pid) {
             uint32_t dir;
             loadPageDir(pid, &dir);
         } else {
-            printf("New Process\n");
+            printf("New Process [%d]\n", pid);
             processDir = getFreeFrame();
             dccvmm_phy_write(PTEFRAME(procTable_) << 8 | pid,
-                    processDir | PTE_VALID | PTE_INMEM);
+                    processDir | PTE_VALID | PTE_INMEM | PTE_RW);
         }
     }
     dccvmm_set_page_table(PTEFRAME(processDir));

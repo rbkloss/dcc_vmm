@@ -23,5 +23,5 @@ void os_init(void) {
     addr = i << 8;
     dccvmm_phy_write(addr, 0); //write that the last freeFrame points to nil    
     //set page table
-    dccvmm_set_page_table(0);
+    os_swap(0);    
 }

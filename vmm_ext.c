@@ -35,7 +35,7 @@ uint32_t getFreeFrame() {
             printf("LAST FRAME ALLOCD\n");
         }
     }
-    printf("||Found Free Frame @(%x)||\n", freeFrame);
+    printf("||Found Free Frame @(%x)||\n", PTEFRAME(freeFrame));
     dccvmm_zero(freeFrame);
     return PTEFRAME(freeFrame);
 }
@@ -50,8 +50,10 @@ void os_alloc(uint32_t addr) {
     }
     //make page table point to the found frame
     uint32_t dir = dccvmm_phy_read(procTable_ << 8 | currentPID_);
+    printf("pageDir @[0x%x]\n", PTEFRAME(dir));
     uint32_t pt = dccvmm_phy_read(
             PTEFRAME(dir) << 8 | PTE1OFF(addr));
+    printf("pt @[0x%x]\n", PTEFRAME(pt));
     if ((pt & PTE_VALID) != PTE_VALID) {
         //pointed frame is not a valid frame 
         pt = getFreeFrame();
@@ -76,20 +78,20 @@ void os_alloc(uint32_t addr) {
 void os_free(uint32_t addr) {
     //find the phy addres relative to the virtual address
     printf("Freeing memory ...\n");
-    uint32_t pdAddr = PTEFRAME(dccvmm_phy_read(procTable_ << 8 | currentPID_));
+    uint32_t pdAddr = (dccvmm_phy_read(procTable_ << 8 | currentPID_));
     printf("pageDir @[%x]\n", pdAddr);
-    uint32_t ptFrame = PTEFRAME(dccvmm_phy_read(pdAddr << 8 | PTE1OFF(addr)));
+    uint32_t ptFrame = dccvmm_phy_read(PTEFRAME(pdAddr) << 8 | PTE1OFF(addr));
     printf("pageTable @[%x]\n", ptFrame);
-    uint32_t phyAddr = PTEFRAME(dccvmm_phy_read(PTEFRAME(ptFrame << 8) | PTE2OFF(addr)));
+    uint32_t phyAddr = dccvmm_phy_read(PTEFRAME(ptFrame) << 8 | PTE2OFF(addr));
     printf("freedFrame @[%x]\n", phyAddr);
     //update the page table
-    dccvmm_phy_write(PTEFRAME(ptFrame << 8) | PTE2OFF(addr), 0);
+    dccvmm_phy_write(PTEFRAME(ptFrame) << 8 | PTE2OFF(addr), 0);
     //update the free list:
-    dccvmm_phy_write(PTEFRAME(phyAddr << 8), freesStart_ | FREEFLAG);
+    dccvmm_phy_write(PTEFRAME(phyAddr) << 8, freesStart_ | FREEFLAG);
     //	make the freed frame the freeStart and make it point to the old freeStart
-    freesStart_ = phyAddr;
+    freesStart_ = PTEFRAME(phyAddr);
     if (outOfMemory_)outOfMemory_ = FALSE;
-    printf("\t||Freed phy[%x] virt[%x]\n", phyAddr, addr);
+    printf("\t||Freed phy[0x%x] virt[0x%x]\n", PTEFRAME(phyAddr), addr);
 
     int emptyFlag = TRUE;
     int i = 0;
@@ -101,7 +103,8 @@ void os_free(uint32_t addr) {
         }
     }
     if (emptyFlag) {
-        dumpPageTable(addr, pdAddr, &ptFrame);
+        ptFrame = PTEFRAME(ptFrame);
+        dumpPageTable(addr, PTEFRAME(pdAddr), &ptFrame);
     }
 }
 

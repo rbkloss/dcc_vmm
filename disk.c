@@ -76,7 +76,8 @@ uint32_t getFreeSector() {
                 // retorna o proximo setor livre;
                 uint32_t sectorID = 8192 * sectorPos + 32 * wordPos + bit;
                 setSectorUsed(sectorID);
-                printf ("Setor livre: %d\n", sectorID);
+                printf("Setor livre: %d\n", sectorID);
+                assert(sectorID > 127);
                 return sectorID;
             }
         }

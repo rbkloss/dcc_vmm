@@ -44,7 +44,7 @@ uint32_t getFreeFrame() {
             printf("LAST FRAME ALLOCD\n");
         }
     }
-    printf("||Found Free Frame @(%x)||\n", PTEFRAME(freeFrame));
+    printf("||Found Free Frame @(0x%x)||\n", PTEFRAME(freeFrame));
     dccvmm_zero(freeFrame);
     return PTEFRAME(freeFrame);
 }

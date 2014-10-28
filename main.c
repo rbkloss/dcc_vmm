@@ -12,11 +12,12 @@ extern void os_swap(uint32_t pid);
 #define BUFSZ 1024
 
 int main(int argc, char **argv) {
-    FILE *fd = fopen(argv[1], "r");
+    FILE *fd = fopen(argv[1], "r");    
     char line[BUFSZ];
-
-    os_init();
+    
     dccvmm_init();
+    os_init();
+    
 
     while (fgets(line, BUFSZ, fd)) {
         unsigned address;
@@ -29,11 +30,11 @@ int main(int argc, char **argv) {
             sscanf(line, "free %x\n", &address);
             os_free(address);
         } else if (!strncmp(line, "read", 4)) {
-            printf("\tReading from memopry ...\n");
+            printf("\tReading [0x%x] from memory ...\n", address);
             sscanf(line, "read %x\n", &address);
             dccvmm_read(address);
         } else if (!strncmp(line, "write", 5)) {
-            printf("\tWriting at memopry ...\n");
+            printf("\tWriting at memory ...\n");
             unsigned data;
             sscanf(line, "write %x %x\n", &address, &data);
             dccvmm_write(address, data);

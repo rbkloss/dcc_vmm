@@ -47,6 +47,7 @@ struct frame {
 	uint32_t words[0x100];
 };
 #define NUMFRAMES 0x1000
+//#define NUMFRAMES 0x14
 
 
 

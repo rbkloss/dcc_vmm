@@ -3,37 +3,58 @@
 uint32_t getFreeFrame() {
     uint32_t freeFrame;
     if (outOfMemory_) {
-        //TODO move victim frame to disk, free it and return.
         printf("Memory is FULL looking for a victim\n\n");
-        uint32_t victimPID, dir, dirFrame, pt, ptFrame, pte, pteFrame;
-        victimPID = rand() % 256;
-        dir = dccvmm_phy_read(procTable_ << 8 | victimPID);
-        while (!(dir & PTE_INMEM)) {
-            victimPID = (victimPID + 1) % 256;
+        while (TRUE) {
+            //TODO move victim frame to disk, free it and return.                        
+            int count = 0;
+            uint32_t victimPID, dir, dirFrame, pt, ptFrame, pte, pteFrame;
+            victimPID = rand() % 256;
             dir = dccvmm_phy_read(procTable_ << 8 | victimPID);
-        }
-        dirFrame = PTEFRAME(dir);
+            while (!(dir & PTE_INMEM) && count < 256) {
+                victimPID = (victimPID + 1) % 256;
+                dir = dccvmm_phy_read(procTable_ << 8 | victimPID);
+                count++;
+            }
+            if (count == 256)continue;
+            else count = 0;
+            dirFrame = PTEFRAME(dir);
 
-        uint32_t row = rand() % 256;
-        pt = dccvmm_phy_read(dirFrame << 8 | row);
-        while (!(pt & PTE_INMEM)) {
-            row = (row + 1) % 256;
-            pt = dccvmm_phy_read(dirFrame << 8 | row);
-        }
-        ptFrame = PTEFRAME(pt);
+            uint32_t ptRow = rand() % 256;
+            pt = dccvmm_phy_read(dirFrame << 8 | ptRow);
+            while (!(pt & PTE_INMEM) && count < 256) {
+                ptRow = (ptRow + 1) % 256;
+                pt = dccvmm_phy_read(dirFrame << 8 | ptRow);
+                count++;
+            }
+            if (count == 256)continue;
+            else count = 0;
+            ptFrame = PTEFRAME(pt);
 
-        row = rand() % 256;
-        pte = dccvmm_phy_read(ptFrame << 8 | row);
-        pteFrame = PTEFRAME(pte);
-        while (!(pte & PTE_INMEM)) {
-            row = (row + 1) % 256;
+            uint32_t row = rand() % 256;
             pte = dccvmm_phy_read(ptFrame << 8 | row);
             pteFrame = PTEFRAME(pte);
+            while (!(pte & PTE_INMEM) && count < 256) {
+                row = (row + 1) % 256;
+                pte = dccvmm_phy_read(ptFrame << 8 | row);
+                pteFrame = PTEFRAME(pte);
+                count++;
+            }
+            if (count == 256)continue;
+            else count = 0;
+            dumpPTE(row << 8, ptFrame);
+            int i = 0, empty = TRUE;
+            for (i = 0; i < NUMWORDS; i++) {
+                uint32_t entry = dccvmm_phy_read(ptFrame << 8 | i);
+                if ((entry & PTE_INMEM)) {
+                    empty = FALSE;
+                }
+            }
+            if (empty) dumpPageTable(ptRow << 8, dirFrame, &pt);
+            printf("Victim is pid[%d], dir[0x%x], pt[0x%x], pte[0x%x]\n",
+                    victimPID, dirFrame, ptFrame, pteFrame);
+            freeFrame = pteFrame;
+            break;
         }
-        dumpPTE(row << 8, ptFrame);
-        printf("Victim is pid[%d], dir[0x%x], pt[0x%x], pte[0x%x]\n",
-                victimPID, dirFrame, ptFrame, pteFrame);
-        freeFrame = pteFrame;
     } else {
         freeFrame = freesStart_;
         freesStart_ = dccvmm_phy_read(freeFrame << 8);
@@ -113,7 +134,7 @@ void os_free(uint32_t addr) {
     int i = 0;
     for (i = 0; i < NUMWORDS; i++) {
         uint32_t pte = dccvmm_phy_read(ptFrame << 8 | i);
-        if (pte & PTE_INMEM == PTE_INMEM) {
+        if ((pte & PTE_INMEM) == PTE_INMEM) {
             //page Table has valid pages
             emptyFlag = FALSE;
         }
@@ -126,15 +147,17 @@ void os_free(uint32_t addr) {
 
 uint32_t os_pagefault(uint32_t address, uint32_t perms, uint32_t pte) {
     if ((pte & PTE_VALID) != PTE_VALID) {
+        printf ("falha PTE_VALID -%x\n", pte);
         fprintf(stderr,
-                "\t!!Faulty memory access @[%x] pte[%x]\n", address, pte);
+                "\t!!Faulty memory access @[0x%x] pte[0x%x]\n", address, pte);
         return VM_ABORT;
-    } else if ((pte & PTE_INMEM) == PTE_INMEM) {
+    } else if ((pte & PTE_INMEM) != PTE_INMEM) {
         uint32_t dir, pt;
 
         loadPageDir(currentPID_, &dir);
-        loadPageTable(address, dir, &pt);
-        loadPTE(address, pt);
+        loadPageTable(address, PTEFRAME(dir), &pt);
+        loadPTE(address, PTEFRAME(pt));
     }
+    return 0;
 }
 

@@ -3,10 +3,7 @@
 #include "disk.h"
 
 void os_init(void) {
-    //set the free frames
-
-    disk_init();
-
+    //set the free frames    
     outOfMemory_ = FALSE;
     freesStart_ = 16;
     procTable_ = 1;
@@ -23,5 +20,6 @@ void os_init(void) {
     addr = i << 8;
     dccvmm_phy_write(addr, 0); //write that the last freeFrame points to nil    
     //set page table
-    os_swap(0);    
+    disk_init();
+    os_swap(0);
 }

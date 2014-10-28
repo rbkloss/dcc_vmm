@@ -6,94 +6,95 @@
 #define NUM_BITS 32 // cada word tem 32 bits
 #define ZERO 0x0000000
 
-void disk_init (){
-	dccvmm_init();
-	int i = 0;
+uint32_t checkBits(uint32_t data);
 
-	dccvmm_phy_write (SWAP_FRAME << 8, 0);
+void disk_init() {
+    int i = 0;
 
-	for (i=0; i<MAP_SIZE; i++){
-		dccvmm_dump_frame(SWAP_FRAME, i);
-	}
+    dccvmm_phy_write(SWAP_FRAME << 8, 0);
 
-	uint32_t data = dccvmm_phy_read (SWAP_FRAME << 8);
+    for (i = 0; i < MAP_SIZE; i++) {
+        dccvmm_dump_frame(SWAP_FRAME, i);
+    }
 
-	for (i=0; i<MAP_SIZE; i++){
-		setSectorUsed (i);
-	}
+    //uint32_t data = dccvmm_phy_read(SWAP_FRAME << 8);
 
-	// Exemplo de uso!!!
-	uint32_t sectorID = getFreeSector();
-	printf ("free sector: %d\n", sectorID);
-	setSectorUsed (sectorID);
-	sectorID = getFreeSector();
-	printf ("free sector: %d\n", sectorID);
-	setSectorUsed (sectorID);
+    for (i = 0; i < MAP_SIZE; i++) {
+        setSectorUsed(i);
+    }
+
+    // Exemplo de uso!!!
+    //uint32_t sectorID = getFreeSector();
+    //printf("free sector: %d\n", sectorID);
+    //setSectorUsed(sectorID);
+    //sectorID = getFreeSector();
+    //printf("free sector: %d\n", sectorID);
+    //setSectorUsed(sectorID);
 }
 
-void setSectorUsed (uint32_t sectorID){
-	// marca no mapeamento do disco que o sectorID será usado.
+void setSectorUsed(uint32_t sectorID) {
+    // marca no mapeamento do disco que o sectorID será usado.
 
-	uint32_t secPos = sectorID / (NUM_WORDS * NUM_BITS) ;
-	sectorID = sectorID - secPos * (NUM_WORDS * NUM_BITS);
-	uint32_t wordPos = sectorID / NUM_BITS;
-	uint32_t bitPos = sectorID - wordPos*NUM_BITS;
+    uint32_t secPos = sectorID / (NUM_WORDS * NUM_BITS);
+    sectorID = sectorID - secPos * (NUM_WORDS * NUM_BITS);
+    uint32_t wordPos = sectorID / NUM_BITS;
+    uint32_t bitPos = sectorID - wordPos*NUM_BITS;
 
-	// printf ("secpos: %d - wordpos: %d - bitPos: %d\n", secPos, wordPos, bitPos);
+    // printf ("secpos: %d - wordpos: %d - bitPos: %d\n", secPos, wordPos, bitPos);
 
-	// Carrega o setor do disco na memoria;
-	dccvmm_load_frame (secPos, SWAP_FRAME);
+    // Carrega o setor do disco na memoria;
+    dccvmm_load_frame(secPos, SWAP_FRAME);
 
-	// marca que o setor será usado;
-	uint32_t data = 1 << bitPos;
-	uint32_t old_data = dccvmm_phy_read (SWAP_FRAME << 8 | wordPos);
-	data = data | old_data;
+    // marca que o setor será usado;
+    uint32_t data = 1 << bitPos;
+    uint32_t old_data = dccvmm_phy_read(SWAP_FRAME << 8 | wordPos);
+    data = data | old_data;
 
-	// escreve de volta na memoria;
-	dccvmm_phy_write (SWAP_FRAME << 8 | wordPos, data);
-	// printf ("data writed: %x\n", data);
-
-	// escreve novamente o setor na memoria;
-	dccvmm_dump_frame (SWAP_FRAME, secPos);
+    // escreve de volta na memoria;
+    dccvmm_phy_write(SWAP_FRAME << 8 | wordPos, data);
+    // escreve novamente o setor na memoria;
+    dccvmm_dump_frame(SWAP_FRAME, secPos);
 }
 
-uint32_t getFreeSector (){
+uint32_t getFreeSector() {
 
-	int i = 0;
+    int i = 0;
 
-	for (i = 0; i < MAP_SIZE; i++){
-		uint32_t sectorPos = i;
+    for (i = 0; i < MAP_SIZE; i++) {
+        uint32_t sectorPos = i;
+        // carrego na memoria o frame;
+        dccvmm_load_frame(sectorPos, SWAP_FRAME);
 
-		// carrego na memoria o frame;
-		dccvmm_load_frame (sectorPos, SWAP_FRAME);
+        int j = 0;
+        for (j = 0; j < NUM_WORDS; j++) {
+            uint32_t wordPos = j;
+            uint32_t data = dccvmm_phy_read(SWAP_FRAME << 8 | wordPos);
 
-		int j = 0;
+            uint32_t bit = checkBits(data);
 
-		for (j = 0; j < NUM_WORDS; j++){
-			uint32_t wordPos = j;
-			uint32_t data = dccvmm_phy_read (SWAP_FRAME << 8 | wordPos);
+            if (bit != 32) {
+                // retorna o proximo setor livre;
+                uint32_t sectorID = 8192 * sectorPos + 32 * wordPos + bit;
+                setSectorUsed(sectorID);
+                printf ("Setor livre: %d\n", sectorID);
+                return sectorID;
+            }
+        }
+    }
 
-			uint32_t bit = checkBits (data);
-
-			if (bit != 32){
-				// retorna o proximo setor livre;
-				return 8192*sectorPos + 32*wordPos + bit;
-			}
-		}
-	}
-
-	// DISCO ENCHEU!!!!
-	fprintf(stderr,"FULL DISK\n\n");
-	return -1;
+    // DISCO ENCHEU!!!!
+    fprintf(stderr, "FULL DISK\n\n");
+    assert(0);
+    return -1;
 }
 
-uint32_t checkBits (uint32_t data){
-	int i = 0;
-	for (i=0; i<32; i++){
-		if (1 & ~data)
-			return i;
-		else
-			data = data >> 1;
-	}
-	return 32;
+uint32_t checkBits(uint32_t data) {
+    int i = 0;
+    for (i = 0; i < 32; i++) {
+        if (1 & ~data)
+            return i;
+        else
+            data = data >> 1;
+    }
+    return 32;
 }

@@ -24,12 +24,17 @@ void disk_init() {
     }
 
     // Exemplo de uso!!!
-    //uint32_t sectorID = getFreeSector();
-    //printf("free sector: %d\n", sectorID);
-    //setSectorUsed(sectorID);
-    //sectorID = getFreeSector();
-    //printf("free sector: %d\n", sectorID);
-    //setSectorUsed(sectorID);
+    // uint32_t sectorID = getFreeSector();
+    // printf("free sector: %d\n", sectorID);
+    // // unsetSectorUsed(sectorID);
+    // sectorID = getFreeSector();
+    // printf("free sector: %d\n", sectorID);
+    // unsetSectorUsed(sectorID);
+    // unsetSectorUsed (128);
+    // sectorID = getFreeSector ();
+    // printf ("free sector: %d\n", sectorID);
+    // sectorID = getFreeSector ();
+    // printf ("free sector: %d\n", sectorID);
 }
 
 void setSectorUsed(uint32_t sectorID) {
@@ -49,6 +54,31 @@ void setSectorUsed(uint32_t sectorID) {
     uint32_t data = 1 << bitPos;
     uint32_t old_data = dccvmm_phy_read(SWAP_FRAME << 8 | wordPos);
     data = data | old_data;
+
+    // escreve de volta na memoria;
+    dccvmm_phy_write(SWAP_FRAME << 8 | wordPos, data);
+    // escreve novamente o setor na memoria;
+    dccvmm_dump_frame(SWAP_FRAME, secPos);
+}
+
+void unsetSectorUsed (uint32_t sectorID) {
+    // marca no mapeamento do disco que o sectorID será usado.
+
+    uint32_t secPos = sectorID / (NUM_WORDS * NUM_BITS);
+    sectorID = sectorID - secPos * (NUM_WORDS * NUM_BITS);
+    uint32_t wordPos = sectorID / NUM_BITS;
+    uint32_t bitPos = sectorID - wordPos*NUM_BITS;
+
+    // printf ("secpos: %d - wordpos: %d - bitPos: %d\n", secPos, wordPos, bitPos);
+
+    // Carrega o setor do disco na memoria;
+    dccvmm_load_frame(secPos, SWAP_FRAME);
+
+    // marca que o setor será usado;
+    uint32_t data = 1 << bitPos;
+    data = ~data;
+    uint32_t old_data = dccvmm_phy_read(SWAP_FRAME << 8 | wordPos);
+    data = data & old_data;
 
     // escreve de volta na memoria;
     dccvmm_phy_write(SWAP_FRAME << 8 | wordPos, data);

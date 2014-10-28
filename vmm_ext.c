@@ -23,13 +23,15 @@ uint32_t getFreeFrame() {
         ptFrame = PTEFRAME(pt);
 
         row = rand() % 256;
+        pte = dccvmm_phy_read(ptFrame << 8 | row);
+        pteFrame = PTEFRAME(pte);
         while (!(pte & PTE_INMEM)) {
             row = (row + 1) % 256;
             pte = dccvmm_phy_read(ptFrame << 8 | row);
             pteFrame = PTEFRAME(pte);
         }
         dumpPTE(row << 8, ptFrame);
-        printf("Victim is pid[%d], dir[%d], pt[%d], pte[%d]\n",
+        printf("Victim is pid[%d], dir[0x%x], pt[0x%x], pte[0x%x]\n",
                 victimPID, dirFrame, ptFrame, pteFrame);
         freeFrame = pteFrame;
     } else {

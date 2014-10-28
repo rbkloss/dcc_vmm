@@ -18,7 +18,6 @@ int main(int argc, char **argv) {
     dccvmm_init();
     os_init();
     
-
     while (fgets(line, BUFSZ, fd)) {
         unsigned address;
         if (line[0] == '#') continue;

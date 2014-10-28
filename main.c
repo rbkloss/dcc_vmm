@@ -29,11 +29,9 @@ int main(int argc, char **argv) {
             sscanf(line, "free %x\n", &address);
             os_free(address);
         } else if (!strncmp(line, "read", 4)) {
-            printf("\tReading [0x%x] from memory ...\n", address);
             sscanf(line, "read %x\n", &address);
             dccvmm_read(address);
         } else if (!strncmp(line, "write", 5)) {
-            printf("\tWriting at memory ...\n");
             unsigned data;
             sscanf(line, "write %x %x\n", &address, &data);
             dccvmm_write(address, data);

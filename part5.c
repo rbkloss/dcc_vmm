@@ -10,7 +10,7 @@ void dumpPageDir(int pid, uint32_t* dir) {
     uint32_t diskDIR;
     *dir = dccvmm_phy_read(procTable_ << 8 | pid);
     if (((*dir) & PTE_INMEM) != PTE_INMEM) {
-        fprintf(stderr, "Target frame for dump is not in mem %s line %d\n", __FILE__, __LINE__);
+        //        fprintf(stderr, "Target frame for dump is not in mem %s line %d\n", __FILE__, __LINE__);
     } else if (((*dir) & PTE_VALID) == PTE_VALID) {
         *dir = PTEFRAME(*dir);
         int i = 0;
@@ -29,7 +29,7 @@ void dumpPageTable(uint32_t address, uint32_t dir, uint32_t *pt) {
     uint32_t diskPT;
     *pt = dccvmm_phy_read(((dir << 8) | PTE1OFF(address)));
     if (((*pt) & PTE_INMEM) != PTE_INMEM) {
-        fprintf(stderr, "Target frame for dump is not in mem %s line %d\n", __FILE__, __LINE__);
+        //        fprintf(stderr, "Target frame for dump is not in mem %s line %d\n", __FILE__, __LINE__);
     } else if ((*pt) & PTE_VALID) {
         *pt = PTEFRAME(*pt);
         int i = 0;
@@ -47,7 +47,7 @@ void dumpPTE(uint32_t address, uint32_t ptFrame) {
     uint32_t diskPTE;
     uint32_t pte = dccvmm_phy_read(ptFrame << 8 | PTE2OFF(address));
     if ((pte & PTE_INMEM) != PTE_INMEM) {
-//        fprintf(stderr, "Target frame for dump is not in mem %s line %d\n", __FILE__, __LINE__);
+        //        fprintf(stderr, "Target frame for dump is not in mem %s line %d\n", __FILE__, __LINE__);
     } else if ((pte & PTE_VALID) == PTE_VALID) {
         pte = PTEFRAME(pte);
         diskPTE = PTE_SECTOR(getFreeSector());
@@ -79,6 +79,7 @@ void loadPageDir(int pid, uint32_t *dir) {
         dccvmm_load_frame(diskDir, *dir);
         dccvmm_phy_write(procTable_ << 8 | currentPID_,
                 (*dir) | PTE_VALID | PTE_RW | PTE_INMEM);
+        unsetSectorUsed(diskDir);
     }
 }
 
@@ -92,6 +93,7 @@ void loadPageTable(uint32_t address, uint32_t dirFrame, uint32_t *pt) {
         dccvmm_load_frame(diskPT, *pt);
         dccvmm_phy_write(dirFrame << 8 | PTE1OFF(address),
                 (*pt) | PTE_VALID | PTE_RW | PTE_INMEM);
+        unsetSectorUsed(diskPT);
     }
 }
 
@@ -105,5 +107,6 @@ void loadPTE(uint32_t address, uint32_t ptFrame) {
         dccvmm_load_frame(diskPTE, mpte);
         dccvmm_phy_write(ptFrame << 8 | PTE2OFF(address),
                 mpte | PTE_VALID | PTE_RW | PTE_INMEM);
+        unsetSectorUsed(diskPTE);
     }
 }

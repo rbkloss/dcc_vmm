@@ -1,16 +1,36 @@
 #include "vmm_ext.h"
 
 uint32_t getFreeFrame() {
+    uint32_t freeFrame;
     if (outOfMemory_) {
         //TODO move victim frame to disk, free it and return.
+        printf("Memory is FULL looking for a victim\n\n");
+        uint32_t victimPID = rand() % 256;
+        uint32_t victimDir = dccvmm_phy_read(procTable_ << 8 | victimPID);
+        while (victimDir & PTE_INMEM != PTE_INMEM) {
+            victimPID = (victimPID + 1) % 256;
+            victimDir = dccvmm_phy_read(procTable_ << 8 | victimPID);
+        }
+        if (victimPID == currentPID_)victimPID = (victimPID + 1) % 256;
 
-    }
-    uint32_t freeFrame = freesStart_;
-    freesStart_ = dccvmm_phy_read(freeFrame << 8);
-    if (freesStart_ == 0) {
-        //this is the last free frame
-        //out of memory
-        outOfMemory_ = TRUE;
+        uint32_t row = rand() % 256;
+        uint32_t victimPT = dccvmm_phy_read(victimDir << 8 | row);
+        while (victimPT & PTE_INMEM != PTE_INMEM) {
+            row = (row + 1) % 256;
+            victimPT = dccvmm_phy_read(victimDir << 8 | row);
+        }
+        freeFrame = dccvmm_phy_read(victimPT << 8 | row);
+        row = rand() % 256;
+        dumpPTE(row << 8, victimPT);
+    } else {
+        freeFrame = freesStart_;
+        freesStart_ = dccvmm_phy_read(freeFrame << 8);
+        if (freesStart_ == 0) {
+            //this is the last free frame
+            //out of memory
+            outOfMemory_ = TRUE;
+            printf("LAST FRAME ALLOCD\n");
+        }
     }
     printf("||Found Free Frame @(%x)||\n", freeFrame);
     dccvmm_zero(freeFrame);
@@ -27,15 +47,15 @@ void os_alloc(uint32_t addr) {
     }
     //make page table point to the found frame
     uint32_t pageDir = dccvmm_phy_read(procTable_ << 8 | currentPID_);
-    uint32_t frameOfPageTable = dccvmm_phy_read(
+    uint32_t pt= dccvmm_phy_read(
             PTEFRAME(pageDir) << 8 | PTE1OFF(addr));
-    if ((frameOfPageTable & PTE_VALID) != PTE_VALID) {
+    if ((pt & PTE_VALID) != PTE_VALID) {
         //pointed frame is not a valid frame 
-        frameOfPageTable = getFreeFrame();
+        pt = getFreeFrame();
         dccvmm_phy_write(PTEFRAME(pageDir) << 8 | PTE1OFF(addr),
-                frameOfPageTable | PTE_VALID | PTE_INMEM | PTE_RW);
+                pt | PTE_VALID | PTE_INMEM | PTE_RW);
     }
-    if (dccvmm_phy_read(PTEFRAME(frameOfPageTable) << 8 | PTE2OFF(addr)) & PTE_VALID) {
+    if (dccvmm_phy_read(PTEFRAME(pt) << 8 | PTE2OFF(addr)) & PTE_VALID) {
         fprintf(stderr, "\tDouble Alloc Detected\n");
         return;
     }
@@ -43,7 +63,7 @@ void os_alloc(uint32_t addr) {
     // frame is not avaliable anymore;
     freeFrame = freeFrame & (~FREEFLAG);
     //write on the page table the allocated Frame
-    dccvmm_phy_write(PTEFRAME(frameOfPageTable) << 8 | PTE2OFF(addr),
+    dccvmm_phy_write(PTEFRAME(pt) << 8 | PTE2OFF(addr),
             freeFrame | PTE_VALID | PTE_INMEM | PTE_RW);
 
     printf("\t||Allocated [%x] @:[%x]\n", addr, freeFrame);
@@ -76,7 +96,7 @@ void os_free(uint32_t addr) {
             emptyFlag = FALSE;
         }
     }
-    if (emptyFlag) {        
+    if (emptyFlag) {
         dumpPageTable(addr, pdAddr, &ptFrame);
     }
 }
@@ -86,7 +106,7 @@ uint32_t os_pagefault(uint32_t address, uint32_t perms, uint32_t pte) {
         fprintf(stderr,
                 "\t!!Faulty memory access @[%x] pte[%x]\n", address, pte);
         return VM_ABORT;
-    } else if ((pte & PTE_INMEM) == PTE_INMEM) {        
+    } else if ((pte & PTE_INMEM) == PTE_INMEM) {
         uint32_t dir, pt;
 
         loadPageDir(currentPID_, &dir);

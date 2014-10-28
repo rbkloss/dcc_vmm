@@ -11,4 +11,5 @@
 void disk_init();
 uint32_t getFreeSector();
 void setSectorUsed(uint32_t sectorID);
+void unsetSectorUsed (uint32_t sectorID);
 #endif

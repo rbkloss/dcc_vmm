@@ -13,7 +13,7 @@
 
 #define PTE_SECTOR(addr) (addr & 0xfffff)
 #define NUMWORDS 256
-#define SWAP_FRAME 13
+#define SWAP_FRAME 1
 
 uint32_t freesStart_;
 uint32_t procTable_;

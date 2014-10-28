@@ -1,4 +1,3 @@
-swap 1
 alloc 0x0
 alloc 0x100
 alloc 0x200

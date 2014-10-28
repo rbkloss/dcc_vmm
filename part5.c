@@ -46,7 +46,7 @@ void dumpPTE(uint32_t address, uint32_t pt) {
     uint32_t diskPTE;
     uint32_t pte = dccvmm_phy_read(pt << 8 | PTE2OFF(address));
     if (pte & PTE_INMEM != PTE_INMEM) {
-        fprintf(stderr, "Target frame for dump is not in mem\n");
+        fprintf(stderr, "Target frame for dump is not in mem\n");        
     } else if (pte & PTE_VALID == PTE_VALID) {
         pte = PTEFRAME(pte);
         diskPTE = PTE_SECTOR(getFreeSector());

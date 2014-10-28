@@ -60,8 +60,10 @@ uint32_t dccvmm_read(uint32_t address) {
     if (pte2 == VM_ABORT) return 0;
     uint32_t pte2frame = PTEFRAME(pte2);
     uint32_t data = __frames[pte2frame].words[PAGEOFFSET(address)];
-    printf("vmm %x phy %x read %x\n", address,
+    FILE* readF = fopen("read.txt", "a");
+    fprintf(readF, "vmm %x phy %x read %x\n", address,
             (pte2frame << 8) + PAGEOFFSET(address), data);
+    fclose(readF);
     return data;
 }
 
@@ -122,9 +124,11 @@ void dccvmm_init(void) {
  * memoria virtual suporta? */
 
 void dccvmm_dump_frame(uint32_t framenum, uint32_t sector) {
+//    printf("DUmping Frame![0x%x][0x%x]\n\n",framenum, sector);
     memcpy(&(__disk[sector]), &(__frames[framenum]), sizeof (__disk[0]));
 }
 
 void dccvmm_load_frame(uint32_t sector, uint32_t framenum) {
+//     printf("Loading Frame![0x%x]Sec[0x%x]\n\n",framenum, sector);
     memcpy(&(__frames[framenum]), &(__disk[sector]), sizeof (__disk[0]));
 }

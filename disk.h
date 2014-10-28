@@ -8,8 +8,7 @@
 #include <inttypes.h>
 #include <assert.h>
 
-void disk_init ();
-uint32_t getFreeSector ();
-void setSectorUsed (uint32_t sectorID);
-static uint32_t checkBits (uint32_t data);
+void disk_init();
+uint32_t getFreeSector();
+void setSectorUsed(uint32_t sectorID);
 #endif
